@@ -1,4 +1,4 @@
-package com.example.backend.common;
+package com.example.backend.common.message;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +22,7 @@ public enum Message {
     private final String code; // messages.properties의 키 값
 
     public String getMessage(MessageSource messageSource) {
+        System.out.println(LocaleContextHolder.getLocale());
         return messageSource.getMessage(this.code, null, LocaleContextHolder.getLocale());
     }
 }
