@@ -1,23 +1,19 @@
 package com.example.backend.member.domain;
 
 import com.example.backend.common.BaseEntity;
-import com.fasterxml.jackson.databind.ser.Serializers;
+import com.example.backend.common.Role;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import org.springframework.stereotype.Component;
+import lombok.*;
 
 import java.time.LocalDate;
 
 @Entity
 @Getter
+@Setter
 @AllArgsConstructor
 @Builder
 @NoArgsConstructor
 public class Member extends BaseEntity {
-
     @Column(nullable = false)
     private String name;
 
@@ -43,5 +39,11 @@ public class Member extends BaseEntity {
 
     @Column(nullable = false)
     private String password;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
+
 
 }

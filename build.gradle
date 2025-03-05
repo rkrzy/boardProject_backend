@@ -29,8 +29,21 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.h2database:h2'
 	annotationProcessor 'org.projectlombok:lombok'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	//jwt
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5' // JWT 표준 API
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5' // 실제 구현체 (JWT 생성,서명,검증 기능)
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
 }
 
 tasks.named('test') {
