@@ -1,2 +1,6 @@
-package com.example.backend.common;public enum Role {
+package com.example.backend.common;
+
+public enum Role {
+    ADMIN,
+    USER,
 }
