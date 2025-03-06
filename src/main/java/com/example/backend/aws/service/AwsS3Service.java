@@ -1,15 +1,17 @@
-package com.example.backend.common.service;
+package com.example.backend.aws.service;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.example.backend.Image.domain.Image;
+import com.example.backend.Image.repository.ImageRepository;
+import com.example.backend.post.domain.Post;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -27,7 +29,7 @@ public class AwsS3Service {
 
     private final AmazonS3 amazonS3;
 
-    public List<String> uploadFile(List<MultipartFile> multipartFiles){
+    public List<Image> uploadFile(List<MultipartFile> multipartFiles, Post post){
         List<String> fileNameList = new ArrayList<>();
 
         // forEach 구문을 통해 multipartFiles 리스트로 넘어온 파일들을 순차적으로 fileNameList 에 추가
@@ -46,8 +48,12 @@ public class AwsS3Service {
             fileNameList.add(fileName);
 
         });
+        List<Image> images = fileNameList.stream().map(
+                (image) -> new Image(image, post)
+        ).toList();
 
-        return fileNameList;
+
+        return images;
     }
 
     // 파일명을 난수화하기 위해 UUID 를 활용하여 난수를 돌린다.

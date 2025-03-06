@@ -1,4 +1,4 @@
-package com.example.backend.common.config;
+package com.example.backend.aws.config;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
