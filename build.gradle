@@ -44,6 +44,10 @@ dependencies {
 
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+	//aws-이미지를 위한 연동
+	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+
+
 }
 
 tasks.named('test') {

@@ -17,7 +17,10 @@ public enum Message {
     NOT_EQUAL_CHECK_PASSWORD("join.password_not_match"),
 
     // 성공 메시지
-    JOIN_SUCCESS("join.success");
+    JOIN_SUCCESS("join.success"),
+
+    //게시물 작성 성공 메시지
+    UPLOAD_SUCCESS("post.success");
 
     private final String code; // messages.properties의 키 값
 
