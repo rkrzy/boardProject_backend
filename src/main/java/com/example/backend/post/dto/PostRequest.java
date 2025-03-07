@@ -13,4 +13,6 @@ public class PostRequest {
     String content;
     Long memberId;
     EventType eventType;
+    int memberMax;
+    String gift;
 }
