@@ -22,6 +22,7 @@ import java.util.Optional;
 
 @Service
 @AllArgsConstructor
+@Transactional
 public class PostService {
 
     private MessageSource messageSource;
@@ -30,7 +31,7 @@ public class PostService {
     private final ImageRepository imageRepository;
     private final MemberRepository memberRepository;
 
-    @Transactional
+
     public ResponseEntity<String> create(PostRequest request, List<MultipartFile> images){
 
         Member member = memberRepository.findById(request.getMemberId())
@@ -55,7 +56,7 @@ public class PostService {
 
         return ResponseEntity.ok(Message.UPLOAD_SUCCESS.getMessage(messageSource));
     }
-    @Transactional
+
     public ResponseEntity<String> delete(Long postId){
 
         Optional<Post> post = postRepository.findById(postId);
@@ -68,4 +69,22 @@ public class PostService {
 
         return ResponseEntity.ok(Message.POST_DELETE_SUCCESS.getMessage(messageSource));
     }
+
+    @Transactional
+    public ResponseEntity<String> update(PostRequest request, Long postId){
+        Optional<Post> post = postRepository.findById(postId);
+        if(post.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Message.POST_NOT_FOUND.getMessage(messageSource));
+        }
+        Post updatePost = post.get();
+
+        updatePost.setContent(request.getContent());
+        updatePost.setTitle(request.getTitle());
+        updatePost.setMemberMax(request.getMemberMax());
+        updatePost.setEventType(request.getEventType());
+
+        return ResponseEntity.ok(Message.POST_UPDATE_SUCCESS.getMessage(messageSource));
+    }
+
+
 }
