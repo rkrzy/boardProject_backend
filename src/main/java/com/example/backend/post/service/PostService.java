@@ -11,11 +11,14 @@ import com.example.backend.post.dto.PostRequest;
 import com.example.backend.post.repository.PostRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.context.MessageSource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -27,18 +30,42 @@ public class PostService {
     private final ImageRepository imageRepository;
     private final MemberRepository memberRepository;
 
+    @Transactional
     public ResponseEntity<String> create(PostRequest request, List<MultipartFile> images){
 
         Member member = memberRepository.findById(request.getMemberId())
                 .orElseThrow(() -> new IllegalArgumentException(Message.NOT_MEMBER_EXIST.getMessage(messageSource)));
 
+        Post post = null;
+        switch (request.getEventType()){
+            case MEETING :
+                post = new Post (request.getTitle(), request.getContent(), member, request.getEventType(), request.getMemberMax(), null);
+                break;
+            case SALE, GIFT :
+                post = new Post (request.getTitle(), request.getContent(), member, request.getEventType(), 0,request.getGift());
+                break;
+            default:
+                throw new IllegalArgumentException("지원하지 않는 게시물 타입입니다: " + request.getEventType());
+        }
 
-        Post post = new Post (request.getTitle(), request.getContent(), member, request.getEventType());
         postRepository.save(post);
 
         List<Image> imageList = awsS3Service.uploadFile(images, post);
         imageRepository.saveAll(imageList);
 
         return ResponseEntity.ok(Message.UPLOAD_SUCCESS.getMessage(messageSource));
+    }
+    @Transactional
+    public ResponseEntity<String> delete(Long postId){
+
+        Optional<Post> post = postRepository.findById(postId);
+        if(post.isEmpty()){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Message.POST_NOT_FOUND.getMessage(messageSource));
+        }
+
+        imageRepository.deleteAllByPost(post.get());
+        postRepository.delete(post.get());
+
+        return ResponseEntity.ok(Message.POST_DELETE_SUCCESS.getMessage(messageSource));
     }
 }
