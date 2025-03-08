@@ -38,9 +38,9 @@ public class SecurityConfig {
 
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/jwt-login", "/jwt-login/", "/jwt-login/login", "/jwt-login/join").permitAll()
+                        .requestMatchers( "/login", "/join").permitAll()
                         .requestMatchers("/jwt-login/admin").hasRole("ADMIN")
-                        .requestMatchers("/post").permitAll()
+                        .requestMatchers("/post/**").hasAnyRole("ENTERPRISE", "ADMIN")
                         .anyRequest().authenticated());
         http
                 .sessionManagement((session) -> session.
