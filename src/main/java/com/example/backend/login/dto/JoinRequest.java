@@ -6,6 +6,7 @@ import com.example.backend.member.domain.Gender;
 import com.example.backend.member.domain.Member;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Null;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -40,6 +41,9 @@ public class JoinRequest {
     @NotNull(message = "생일을 입력하세요")
     private LocalDate birthdate;
 
+    @Null(message = "역할을 입력하세요")
+    private Role role;
+
     @NotBlank(message = "전화번호를 입력하세요")
     private String phoneNumber;
     public Member toEntity(){
@@ -52,6 +56,7 @@ public class JoinRequest {
                 .phoneNumber(this.phoneNumber)
                 .gender(this.gender)
                 .email(this.email)
+                .role(this.role)
                 .birthdate(this.birthdate)
                 .build();
     }

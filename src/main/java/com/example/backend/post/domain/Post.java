@@ -30,4 +30,10 @@ public class Post extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private EventType eventType;
+
+    @Column(nullable = true)
+    private int memberMax;
+
+    @Column(nullable = true)
+    private String gift;
 }
