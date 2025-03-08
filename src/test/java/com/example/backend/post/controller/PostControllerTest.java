@@ -203,4 +203,54 @@ public class PostControllerTest {
                 .andExpect(MockMvcResultMatchers.content().string(Message.POST_NOT_FOUND.getMessage(messageSource)));
 
     }
+
+    @Test
+    @WithMockUser(roles = "ENTERPRISE") //이 주석을 붙이면 token이 없어도 인증된 사용자로 변경된다.
+    @DisplayName("게시글 수정 테스트")
+    void updatePostSuccess() throws Exception{
+        PostRequest postRequest = PostRequest.builder()
+                .title("테스트 제목")
+                .content("테스트 내용")
+                .memberId(1L)
+                .eventType(EventType.MEETING)
+                .build();
+
+        MockMultipartFile postRequestPart = new MockMultipartFile(
+                "postRequest",
+                "postRequest.json",
+                "application/json",
+                new ByteArrayInputStream(objectMapper.writeValueAsBytes(postRequest))
+        );
+
+        MockMultipartFile imageFile = new MockMultipartFile(
+                "images",
+                "test-image.jpg",
+                "image/jpeg",
+                "dummy image data".getBytes(StandardCharsets.UTF_8)
+        );
+
+        MvcResult creationResult = mockMvc.perform(MockMvcRequestBuilders.multipart("/post")
+                        .file(postRequestPart)
+                        .file(imageFile)
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect((MockMvcResultMatchers.status().isOk()))
+                .andExpect(MockMvcResultMatchers.content().string(Message.UPLOAD_SUCCESS.getMessage(messageSource)))
+                .andReturn();
+
+        Long postId = 1L;
+        PostRequest postUpdateRequest = PostRequest.builder()
+                .title("테스트 수정 제목")
+                .content("테스트 수정 내용")
+                .memberId(1L)
+                .eventType(EventType.GIFT)
+                .build();
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/post/{postId}", postId)
+                        .content(objectMapper.writeValueAsBytes(postUpdateRequest))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().string(Message.POST_UPDATE_SUCCESS.getMessage(messageSource)));
+
+
+    }
 }
