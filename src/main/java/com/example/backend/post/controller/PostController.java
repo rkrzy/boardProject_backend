@@ -26,7 +26,10 @@ public class PostController {
     }
     @DeleteMapping("/{postId}")
     public ResponseEntity<String> deletePost(@PathVariable Long postId){
-
         return postService.delete(postId);
+    }
+    @PutMapping("/{postId}")
+    public ResponseEntity<String> updatePost(@RequestBody PostRequest request,@PathVariable Long postId){
+        return postService.update(request,postId);
     }
 }
