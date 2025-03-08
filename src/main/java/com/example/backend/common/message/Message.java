@@ -25,7 +25,11 @@ public enum Message {
 
     POST_DELETE_SUCCESS("post.delete_success"),//게시물 삭제 성공 메시지
     POST_DELETE_FAIL("post.delete_fail"),//게시물 삭제 실패 메시지
-    POST_NOT_FOUND("post.not_found");//게시물 없을때
+    POST_NOT_FOUND("post.not_found"),//게시물 없을때
+
+    POST_UPDATE_SUCCESS("post.update_success"),
+    POST_UPDATE_FAIL("post.update_fail");
+
 
     private final String code; // messages.properties의 키 값
 
