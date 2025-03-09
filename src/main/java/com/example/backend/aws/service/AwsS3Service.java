@@ -29,31 +29,47 @@ public class AwsS3Service {
 
     private final AmazonS3 amazonS3;
 
-    public List<Image> uploadFile(List<MultipartFile> multipartFiles, Post post){
-        List<String> fileNameList = new ArrayList<>();
+    public List<Image> uploadFiles(Post post, MultipartFile thumbnail, List<MultipartFile> detailImages) {
+        List<Image> uploadedImages = new ArrayList<>();
 
-        // forEach 구문을 통해 multipartFiles 리스트로 넘어온 파일들을 순차적으로 fileNameList 에 추가
-        multipartFiles.forEach(file -> {
-            String fileName = createFileName(file.getOriginalFilename());
-            ObjectMetadata objectMetadata = new ObjectMetadata();
-            objectMetadata.setContentLength(file.getSize());
-            objectMetadata.setContentType(file.getContentType());
+        // 썸네일 처리 (방법 1과 동일)
+        if (thumbnail != null && !thumbnail.isEmpty()) {
+            String thumbnailFileName = createFileName(thumbnail.getOriginalFilename());
+            ObjectMetadata thumbnailMeta = new ObjectMetadata();
+            thumbnailMeta.setContentLength(thumbnail.getSize());
+            thumbnailMeta.setContentType(thumbnail.getContentType());
 
-            try(InputStream inputStream = file.getInputStream()){
-                amazonS3.putObject(new PutObjectRequest(bucket, fileName, inputStream, objectMetadata)
+            try (InputStream thumbnailStream = thumbnail.getInputStream()) {
+                amazonS3.putObject(new PutObjectRequest(bucket, thumbnailFileName, thumbnailStream, thumbnailMeta)
                         .withCannedAcl(CannedAccessControlList.PublicRead));
-            } catch (IOException e){
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다.");
+            } catch (IOException e) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "썸네일 업로드 실패");
             }
-            fileNameList.add(fileName);
+            Image thumbnailImage = new Image(thumbnailFileName, true, post);
+            uploadedImages.add(thumbnailImage);
+        }
 
-        });
-        List<Image> images = fileNameList.stream().map(
-                (image) -> new Image(image, post)
-        ).toList();
+        // 상세 이미지 처리 (List 사용)
+        if (detailImages != null && !detailImages.isEmpty()) {
+            detailImages.forEach(file -> {
+                if (file != null && !file.isEmpty()) {
+                    String fileName = createFileName(file.getOriginalFilename());
+                    ObjectMetadata meta = new ObjectMetadata();
+                    meta.setContentLength(file.getSize());
+                    meta.setContentType(file.getContentType());
 
-
-        return images;
+                    try (InputStream inputStream = file.getInputStream()) {
+                        amazonS3.putObject(new PutObjectRequest(bucket, fileName, inputStream, meta)
+                                .withCannedAcl(CannedAccessControlList.PublicRead));
+                    } catch (IOException e) {
+                        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "상세 이미지 업로드 실패");
+                    }
+                    Image detailImage = new Image(fileName, false, post);
+                    uploadedImages.add(detailImage);
+                }
+            });
+        }
+        return uploadedImages;
     }
 
     // 파일명을 난수화하기 위해 UUID 를 활용하여 난수를 돌린다.
