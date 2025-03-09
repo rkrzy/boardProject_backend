@@ -35,12 +35,17 @@ public class PostController {
         return postService.update(request,postId);
     }
 
-    @GetMapping("/post")
+    @GetMapping
     public ResponseEntity listPost(
             @RequestParam(required = false) String category,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
             ){
             return postService.getList(category,page,size);
+    }
+    @GetMapping("{postId}")
+    public ResponseEntity detailPost(@PathVariable Long postId){
+
+        return postService.detail(postId);
     }
 }
