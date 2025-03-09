@@ -1,6 +1,6 @@
 package com.example.backend.common;
 
-public enum EventType {
+public enum Category {
     SALE,
     GIFT,
     MEETING

@@ -20,10 +20,12 @@ public class PostController {
     @PostMapping
     public ResponseEntity<String> createPost(
             @RequestPart("postRequest") PostRequest request,
+            @RequestPart(value = "thumbnail") MultipartFile thumbnail,
             @RequestPart(value = "images", required = false)List<MultipartFile> images) {
 
-        return postService.create(request, images);
+        return postService.create(request, thumbnail, images);
     }
+
     @DeleteMapping("/{postId}")
     public ResponseEntity<String> deletePost(@PathVariable Long postId){
         return postService.delete(postId);
@@ -31,5 +33,14 @@ public class PostController {
     @PutMapping("/{postId}")
     public ResponseEntity<String> updatePost(@RequestBody PostRequest request,@PathVariable Long postId){
         return postService.update(request,postId);
+    }
+
+    @GetMapping("/post")
+    public ResponseEntity listPost(
+            @RequestParam(required = false) String category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+            ){
+            return postService.getList(category,page,size);
     }
 }

@@ -1,13 +1,10 @@
 package com.example.backend.post.domain;
 
-import com.example.backend.Image.domain.Image;
 import com.example.backend.common.BaseEntity;
-import com.example.backend.common.EventType;
+import com.example.backend.common.Category;
 import com.example.backend.member.domain.Member;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.util.List;
 
 @Entity
 @Getter
@@ -29,10 +26,13 @@ public class Post extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private EventType eventType;
+    private Category category;
 
     @Column(nullable = true)
-    private int memberMax;
+    private Integer memberMax;
+
+    @Column(nullable = true)
+    private Integer currentAttend;
 
     @Column(nullable = true)
     private String gift;
