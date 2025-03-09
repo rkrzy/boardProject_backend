@@ -1,2 +1,7 @@
-package com.example.backend.post.dto;public class PostListResponse {
-}
+    package com.example.backend.post.dto;
+
+    import java.util.List;
+
+    public record PostListResponse (
+        List<PostResponse> postList
+    ){}
