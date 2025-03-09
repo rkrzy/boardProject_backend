@@ -7,9 +7,9 @@ import com.example.backend.common.message.Message;
 import com.example.backend.login.dto.JoinRequest;
 import com.example.backend.member.domain.Address;
 import com.example.backend.member.domain.Gender;
-import com.example.backend.member.domain.Member;
 import com.example.backend.member.repository.MemberRepository;
 import com.example.backend.post.domain.Post;
+import com.example.backend.post.dto.PostDetailResponse;
 import com.example.backend.post.dto.PostListResponse;
 import com.example.backend.post.dto.PostRequest;
 import com.example.backend.post.dto.PostResponse;
@@ -39,6 +39,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import static org.junit.jupiter.api.Assertions.*;
@@ -52,6 +53,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import static com.example.backend.common.Role.ENTERPRISE;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+
+
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 @ExtendWith(SpringExtension.class)
@@ -168,14 +173,14 @@ public class PostControllerTest {
                         .file(postRequestPart)
                         .file(imageFile)
                         .contentType(MediaType.MULTIPART_FORM_DATA))
-                .andExpect((MockMvcResultMatchers.status().isOk()))
+                .andExpect((status().isOk()))
                 .andExpect(MockMvcResultMatchers.content().string(Message.UPLOAD_SUCCESS.getMessage(messageSource)))
                 .andReturn();
 
         Long postId = 1L;
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/post/{postId}", postId))
-                .andExpect((MockMvcResultMatchers.status().isOk()))
+                .andExpect((status().isOk()))
                 .andExpect(MockMvcResultMatchers.content().string(Message.POST_DELETE_SUCCESS.getMessage(messageSource)));
 
     }
@@ -209,14 +214,14 @@ public class PostControllerTest {
                         .file(postRequestPart)
                         .file(imageFile)
                         .contentType(MediaType.MULTIPART_FORM_DATA))
-                .andExpect((MockMvcResultMatchers.status().isOk()))
+                .andExpect((status().isOk()))
                 .andExpect(MockMvcResultMatchers.content().string(Message.UPLOAD_SUCCESS.getMessage(messageSource)))
                 .andReturn();
 
         Long postId = 2L;
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/post/{postId}", postId))
-                .andExpect((MockMvcResultMatchers.status().isNotFound()))
+                .andExpect((status().isNotFound()))
                 .andExpect(MockMvcResultMatchers.content().string(Message.POST_NOT_FOUND.getMessage(messageSource)));
 
     }
@@ -250,7 +255,7 @@ public class PostControllerTest {
                         .file(postRequestPart)
                         .file(imageFile)
                         .contentType(MediaType.MULTIPART_FORM_DATA))
-                .andExpect((MockMvcResultMatchers.status().isOk()))
+                .andExpect((status().isOk()))
                 .andExpect(MockMvcResultMatchers.content().string(Message.UPLOAD_SUCCESS.getMessage(messageSource)))
                 .andReturn();
 
@@ -265,7 +270,7 @@ public class PostControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.put("/post/{postId}", postId)
                         .content(objectMapper.writeValueAsBytes(postUpdateRequest))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().string(Message.POST_UPDATE_SUCCESS.getMessage(messageSource)));
 
 
@@ -341,5 +346,50 @@ public class PostControllerTest {
         assertEquals(firstPost.getCategory().name(), firstDto.category());
 
         assertEquals(firstPost.getCreatedAt(), firstDto.createdAt());
+    }
+
+    @Test
+    @WithMockUser(roles = "ENTERPRISE")
+    @DisplayName("게시물 상세 출력")
+    void postDetail() throws Exception{
+        Post testPost = Post.builder()
+                .title("테스트 게시글")
+                .content("테스트 내용입니다.")
+                .member(memberRepository.findById(1L).get())
+                .category(Category.MEETING)
+                .memberMax(10)
+                .currentAttend(5)
+                .gift("테스트 선물")
+                .build();
+        postRepository.save(testPost);
+
+        Image testImage = Image.builder()
+                .imageUrl("http://example.com/test-image.jpg")
+                .isThumbnail(true)
+                .post(testPost)
+                .build();
+        imageRepository.save(testImage);
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get("/post/{postId}", testPost.getId())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())  // HTTP 200 응답 확인
+                .andExpect( jsonPath("$.id").value(testPost.getId())) // 게시글 ID 검증
+                .andExpect( jsonPath("$.title").value(testPost.getTitle())) // 제목 검증
+                .andExpect( jsonPath("$.content").value(testPost.getContent())) // 내용 검증
+                .andExpect( jsonPath("$.member.id").value(memberRepository.findById(1L).get().getId())) // 작성자 ID 검증
+                .andExpect( jsonPath("$.member.name").value(memberRepository.findById(1L).get().getName())) // 작성자 이름 검증
+                .andExpect( jsonPath("$.currentMemberCount").value(testPost.getCurrentAttend())) // 현재 참석자 수 검증
+                .andExpect( jsonPath("$.memberMax").value(testPost.getMemberMax())) // 최대 인원 검증
+                .andExpect( jsonPath("$.gift").value(testPost.getGift())) // 선물 검증
+                .andExpect( jsonPath("$.category").value(testPost.getCategory().name())) // 카테고리 검증
+                .andExpect( jsonPath("$.imageUrl[0].imageUrl").value(testImage.getImageUrl())) // 이미지 URL 검증
+                .andReturn();
+
+        // JSON 응답을 PostDetailResponse로 변환
+        String responseBody = result.getResponse().getContentAsString();
+        PostDetailResponse response = objectMapper.readValue(responseBody, PostDetailResponse.class);
+
+        assertNotNull(response);
+        assertEquals(testPost.getId(), response.id());
+        assertEquals(testPost.getTitle(), response.title());
     }
 }
