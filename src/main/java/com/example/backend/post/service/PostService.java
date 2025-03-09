@@ -1,6 +1,7 @@
 package com.example.backend.post.service;
 
 import com.example.backend.Image.domain.Image;
+import com.example.backend.Image.dto.ImageResponse;
 import com.example.backend.Image.repository.ImageRepository;
 import com.example.backend.aws.service.AwsS3Service;
 import com.example.backend.common.message.Message;
@@ -8,10 +9,12 @@ import com.example.backend.member.domain.Member;
 import com.example.backend.member.dto.MemberResponse;
 import com.example.backend.member.repository.MemberRepository;
 import com.example.backend.post.domain.Post;
+import com.example.backend.post.dto.PostDetailResponse;
 import com.example.backend.post.dto.PostListResponse;
 import com.example.backend.post.dto.PostRequest;
 import com.example.backend.post.dto.PostResponse;
 import com.example.backend.post.repository.PostRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
@@ -127,4 +130,29 @@ public class PostService {
         return ResponseEntity.ok(response);
     }
 
+    public ResponseEntity<PostDetailResponse> detail(Long postId){
+        Post post = postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException(Message.POST_NOT_FOUND.getMessage(messageSource)));
+
+        List<Image> images = imageRepository.findAllByPost(post);
+
+        List<ImageResponse> imageResponses = imageRepository.findAllByPost(post)
+                .stream()
+                .map(image -> new ImageResponse(image.getId(), image.getImageUrl(), image.isThumbnail()))
+                .toList();
+
+        PostDetailResponse postDetail = new PostDetailResponse(
+                post.getId(),
+                new MemberResponse(post.getMember().getId(), post.getMember().getName()),
+                post.getTitle(),
+                post.getContent(),
+                imageResponses,
+                Optional.ofNullable(post.getCurrentAttend()).orElse(0),
+                Optional.ofNullable(post.getMemberMax()).orElse(0),
+                post.getGift(),
+                post.getCategory().name(),
+                post.getCreatedAt()
+                );
+
+        return ResponseEntity.ok(postDetail);
+    }
 }
