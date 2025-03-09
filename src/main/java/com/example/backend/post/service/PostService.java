@@ -5,6 +5,7 @@ import com.example.backend.Image.repository.ImageRepository;
 import com.example.backend.aws.service.AwsS3Service;
 import com.example.backend.common.message.Message;
 import com.example.backend.member.domain.Member;
+import com.example.backend.member.dto.MemberResponse;
 import com.example.backend.member.repository.MemberRepository;
 import com.example.backend.post.domain.Post;
 import com.example.backend.post.dto.PostListResponse;
@@ -22,7 +23,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.awt.print.Pageable;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -44,15 +46,15 @@ public class PostService {
                 .orElseThrow(() -> new IllegalArgumentException(Message.NOT_MEMBER_EXIST.getMessage(messageSource)));
 
         Post post = null;
-        switch (request.getEventType()){
+        switch (request.getCategory()){
             case MEETING :
-                post = new Post (request.getTitle(), request.getContent(), member, request.getEventType(), request.getMemberMax(), null);
+                post = new Post (request.getTitle(), request.getContent(), member, request.getCategory(), request.getMemberMax(),0, null);
                 break;
             case SALE, GIFT :
-                post = new Post (request.getTitle(), request.getContent(), member, request.getEventType(), 0,request.getGift());
+                post = new Post (request.getTitle(), request.getContent(), member, request.getCategory(), 0,0,request.getGift());
                 break;
             default:
-                throw new IllegalArgumentException("지원하지 않는 게시물 타입입니다: " + request.getEventType());
+                throw new IllegalArgumentException("지원하지 않는 게시물 타입입니다: " + request.getCategory());
         }
 
         postRepository.save(post);
@@ -87,12 +89,12 @@ public class PostService {
         updatePost.setContent(request.getContent());
         updatePost.setTitle(request.getTitle());
         updatePost.setMemberMax(request.getMemberMax());
-        updatePost.setEventType(request.getEventType());
+        updatePost.setCategory(request.getCategory());
 
         return ResponseEntity.ok(Message.POST_UPDATE_SUCCESS.getMessage(messageSource));
     }
     public ResponseEntity<PostListResponse> getList(String category, int page, int size){
-        Pageable pageable = (Pageable) PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
         Page<Post> posts;
         if(category == null || category.isEmpty()){
@@ -104,9 +106,21 @@ public class PostService {
         List<PostResponse> postResponseList = posts.getContent().
                 stream()
                 .map(post -> {
-                    List<Image> images = imageRepository.findByPostId(post.getId());
-                })
-                .toList();
+                    Optional<Image> thumbnail = imageRepository.findFirstByPostIdAndIsThumbnailTrue(post.getId());
+                    String thumbnailUrl = thumbnail.map(Image::getImageUrl).orElse("default");
+                    return new PostResponse(
+                            post.getId(),
+                            new MemberResponse(post.getMember().getId(), post.getMember().getName()),
+                            post.getTitle(),
+                            post.getContent(),
+                            thumbnailUrl,
+                            post.getCurrentAttend(),
+                            post.getMemberMax(),
+                            post.getGift(),
+                            post.getCategory().name(),
+                            post.getCreatedAt()
+                    );
+                }).toList();
 
         PostListResponse response = new PostListResponse(postResponseList);
 
