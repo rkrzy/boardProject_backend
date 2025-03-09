@@ -1,7 +1,6 @@
 package com.example.backend.post.controller;
 
 
-import com.example.backend.post.dto.PostListResponse;
 import com.example.backend.post.dto.PostRequest;
 import com.example.backend.post.service.PostService;
 import lombok.AllArgsConstructor;
@@ -36,12 +35,12 @@ public class PostController {
         return postService.update(request,postId);
     }
 
-    @GetMapping("/post/{pageCount}")
-    public ResponseEntity<PostListResponse> listPost(
+    @GetMapping("/post")
+    public ResponseEntity listPost(
             @RequestParam(required = false) String category,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
             ){
-
-        }
+            return postService.getList(category,page,size);
+    }
 }
