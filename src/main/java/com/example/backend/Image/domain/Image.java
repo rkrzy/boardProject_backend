@@ -16,6 +16,9 @@ public class Image extends BaseEntity {
     @Column(nullable = false)
     private String imageUrl;
 
+    @Column(nullable = false)
+    private boolean isThumbnail;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
